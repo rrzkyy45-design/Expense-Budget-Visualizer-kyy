@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PocketPulse — Personal Finance Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <!-- ── HEADER ── -->
+  <header class="app-header">
+    <div class="header-brand">
+      <span class="brand-icon">💰</span>
+      <div class="brand-text">
+        <h1 class="brand-name">PocketPulse</h1>
+        <p class="brand-subtitle">Personal Finance Dashboard</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <p class="brand-tagline">"Track your spending. Stay in control."</p>
+      <button id="themeToggleBtn" class="btn-icon" aria-label="Toggle dark mode" title="Toggle dark/light mode">
+        <span id="themeIcon">🌙</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ── MAIN LAYOUT ── -->
+  <main class="dashboard">
+
+    <!-- ── ROW 1: SUMMARY CARDS ── -->
+    <section class="summary-row">
+
+      <!-- Total Spending (prominent) -->
+      <div class="card card-hero" id="totalCard">
+        <div class="card-icon-bg">💸</div>
+        <div class="card-content">
+          <p class="card-label">Total Spending</p>
+          <p class="card-value" id="totalSpending">$0.00</p>
+          <p class="card-sub" id="txCount">0 transactions</p>
+        </div>
+      </div>
+
+      <!-- Food -->
+      <div class="card card-category" data-category="food">
+        <div class="cat-icon">🍔</div>
+        <div class="card-content">
+          <p class="card-label">Food</p>
+          <p class="card-value" id="totalFood">$0.00</p>
+        </div>
+      </div>
+
+      <!-- Transport -->
+      <div class="card card-category" data-category="transport">
+        <div class="cat-icon">🚗</div>
+        <div class="card-content">
+          <p class="card-label">Transport</p>
+          <p class="card-value" id="totalTransport">$0.00</p>
+        </div>
+      </div>
+
+      <!-- Fun -->
+      <div class="card card-category" data-category="fun">
+        <div class="cat-icon">🎮</div>
+        <div class="card-content">
+          <p class="card-label">Fun</p>
+          <p class="card-value" id="totalFun">$0.00</p>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── ROW 2: CHART + FORM ── -->
+    <section class="middle-row">
+
+      <!-- Spending Chart -->
+      <div class="card card-chart">
+        <div class="card-header">
+          <h2 class="section-title">📊 Spending Breakdown</h2>
+        </div>
+        <div class="chart-container">
+          <canvas id="spendingChart"></canvas>
+          <div class="chart-empty" id="chartEmpty">
+            <span>📭</span>
+            <p>No expenses yet.<br/>Add your first transaction!</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add Transaction Form -->
+      <div class="card card-form">
+        <div class="card-header">
+          <h2 class="section-title">➕ Add Transaction</h2>
+        </div>
+
+        <form id="transactionForm" novalidate>
+
+          <div class="form-group">
+            <label for="txDesc">Description</label>
+            <input
+              type="text"
+              id="txDesc"
+              placeholder="e.g. Lunch at canteen"
+              maxlength="60"
+              autocomplete="off"
+            />
+            <span class="field-error" id="descError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="txAmount">Amount ($)</label>
+            <input
+              type="number"
+              id="txAmount"
+              placeholder="0.00"
+              min="0.01"
+              step="0.01"
+            />
+            <span class="field-error" id="amountError"></span>
+          </div>
+
+          <div class="form-group">
+            <label for="txCategory">Category</label>
+            <select id="txCategory">
+              <option value="food">🍔 Food</option>
+              <option value="transport">🚗 Transport</option>
+              <option value="fun">🎮 Fun</option>
+              <option value="other">📦 Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="txDate">Date</label>
+            <input type="date" id="txDate" />
+          </div>
+
+          <button type="submit" class="btn-primary" id="addBtn">Add Transaction</button>
+
+        </form>
+      </div>
+
+    </section>
+
+    <!-- ── ROW 3: SPENDING LIMIT ── -->
+    <section class="limit-row">
+      <div class="card card-limit">
+        <div class="card-header limit-header">
+          <h2 class="section-title">🎯 Monthly Spending Limit</h2>
+          <div class="limit-input-group">
+            <label for="limitInput" class="sr-only">Set limit</label>
+            <span class="limit-prefix">$</span>
+            <input
+              type="number"
+              id="limitInput"
+              class="limit-input"
+              placeholder="500"
+              min="1"
+              step="1"
+              aria-label="Monthly spending limit"
+            />
+            <button class="btn-secondary" id="setLimitBtn">Set Limit</button>
+          </div>
+        </div>
+
+        <div class="progress-section">
+          <div class="progress-labels">
+            <span id="progressSpent">Spent: $0.00</span>
+            <span id="progressLimit">Limit: —</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+          <p class="limit-status" id="limitStatus"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── ROW 4: TRANSACTION LIST ── -->
+    <section class="list-row">
+      <div class="card card-list">
+        <div class="card-header list-header">
+          <h2 class="section-title">🧾 Transactions</h2>
+          <div class="list-controls">
+            <select id="filterCategory" class="filter-select" aria-label="Filter by category">
+              <option value="all">All Categories</option>
+              <option value="food">🍔 Food</option>
+              <option value="transport">🚗 Transport</option>
+              <option value="fun">🎮 Fun</option>
+              <option value="other">📦 Other</option>
+            </select>
+            <button class="btn-danger" id="clearAllBtn" title="Clear all transactions">🗑 Clear All</button>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState">
+          <div class="empty-icon">🪙</div>
+          <p class="empty-title">No expenses yet.</p>
+          <p class="empty-sub">Add your first transaction to get started!</p>
+        </div>
+
+        <!-- Transaction list -->
+        <ul class="tx-list" id="txList" aria-label="Transaction list"></ul>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer class="app-footer">
+    <p>PocketPulse &copy; 2026 &mdash; Built for students, by students 🎓</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
